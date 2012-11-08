@@ -26,6 +26,7 @@ void Compute::ShowAdd(int a, int b)
 void Compute::ShowMul(int a, int b)
 {
     Common common;
+
     common.Print(a);
     common.Print(b);
     common.Print(a + b);

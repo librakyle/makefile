@@ -55,10 +55,10 @@
 ##==========================================================================
 
 # The pre-processor and compiler options.
-MY_CFLAGS = `pkg-config --cflags opencv` -I$(SRCROOT)
+MY_CFLAGS = `pkg-config --cflags opencv boost` -I$(SRCROOT)
 
 # The linker options.
-MY_LIBS   = `pkg-config --libs opencv`
+MY_LIBS   = `pkg-config --libs opencv boost`
 
 # The pre-processor options used by the cpp (man cpp for more).
 CPPFLAGS  = -Wall
@@ -150,35 +150,35 @@ all: $(PROGRAM)
 #------------------------------------------
 
 %.d:%.c
-	echo -n $(dir $<) > $@
+	@echo -n $(dir $<) > $@
 	$(DEPEND.d) $< >> $@
 
 %.d:%.C
-	echo -n $(dir $<) > $@
+	@echo -n $(dir $<) > $@
 	$(DEPEND.d) $< >> $@
 
 %.d:%.cc
-	echo -n $(dir $<) > $@
+	@echo -n $(dir $<) > $@
 	$(DEPEND.d) $< >> $@
 
 %.d:%.cpp
-	echo -n $(dir $<) > $@
+	@echo -n $(dir $<) > $@
 	$(DEPEND.d) $< >> $@
 
 %.d:%.CPP
-	echo -n $(dir $<) > $@
+	@echo -n $(dir $<) > $@
 	$(DEPEND.d) $< >> $@
 
 %.d:%.c++
-	echo -n $(dir $<) > $@
+	@echo -n $(dir $<) > $@
 	$(DEPEND.d) $< >> $@
 
 %.d:%.cp
-	echo -n $(dir $<) > $@
+	@echo -n $(dir $<) > $@
 	$(DEPEND.d) $< >> $@
 
 %.d:%.cxx
-	echo -n $(dir $<) > $@
+	@echo -n $(dir $<) > $@
 	$(DEPEND.d) $< >> $@
 
 # Rules for generating object files (.o).
