@@ -62,11 +62,11 @@ MY_LIBS   = `pkg-config --libs opencv boost`
 
 # The pre-processor options used by the cpp (man cpp for more).
 CPPFLAGS  = -Wall
-CFLAGS  = -g -O2
-CXXFLAGS= -g -O2
+CFLAGS  = -g
+CXXFLAGS= -g
 
 # The root of the project.
-SRCROOT   = /home/librakyle/Software/Makefile
+SRCROOT   = .
 SRCDIR    = 
 RECURSION = 1
 
