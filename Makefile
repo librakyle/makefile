@@ -101,9 +101,11 @@ SRCROOT := $(foreach d,$(SRCROOT),$(d:/=))
 SRCDIRS := $(strip $(SRCROOT) $(SRCDIR))
 SRCDIRS := $(foreach d,$(SRCDIRS),$(d:/=))
 ifeq ($(RECURSION), 1)
-SRCDIRS := $(shell find $(SRCDIRS) -type d)
+SRCDIRS := $(shell find $(SRCDIRS) -type d | grep \\.git -v)
 endif
 SRCDIRS := $(sort $(SRCDIRS))
+RMOBJS  := $(addsuffix /*.o, $(SRCDIRS))
+RMDEPS  := $(RMOBJS:.o=.d)
 
 # The options used in linking as well as in any direct use of ld.
 LDFLAGS   =
@@ -237,7 +239,7 @@ endif
 endif
 
 clean:
-	$(RM) $(DEPS) $(OBJS)
+	$(RM) $(RMDEPS) $(RMOBJS)
 	$(RM) $(PROGRAM) $(foreach d,$(PROGRAM),$(addprefix $(d),.exe))
 
 # Show help.
