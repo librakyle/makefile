@@ -30,7 +30,7 @@
 #
 # Usage:
 # ------
-# 1. Copy the Makefile to your program directory.
+# 1. Copy the Makefile to your program directory or included by other.
 # 2. Customize in the "Customizable Section" only if necessary:
 #    * to use non-standard C/C++ libraries, set pre-processor or compiler
 #      options to <MY_CFLAGS> and linker ones to <MY_LIBS>
@@ -55,15 +55,15 @@
 ##==========================================================================
 
 # The pre-processor and compiler options.
-MY_CFLAGS = `pkg-config --cflags opencv boost` -I$(SRCROOT)
+#MY_CFLAGS = `pkg-config --cflags opencv boost` -I$(SRCROOT)
 
 # The linker options.
-MY_LIBS   = `pkg-config --libs opencv boost`
+#MY_LIBS   = `pkg-config --libs opencv boost`
 
 # The pre-processor options used by the cpp (man cpp for more).
 CPPFLAGS  = -Wall
-CFLAGS  = -g
-CXXFLAGS= -g
+CFLAGS    ?= -g
+CXXFLAGS  ?= -g
 
 # The root of the project.
 SRCROOT   = .
@@ -72,7 +72,7 @@ RECURSION = 1
 
 # The executable file name.
 # If not specified, current directory name or `demo.out' will be used.
-PROGRAM   = Main Main2 Subtitle/aa/bb/Main3
+#PROGRAM   = Main Main2 Subtitle/aa/bb/Main3
 
 ## Implicit Section: change the following only when necessary.
 ##==========================================================================
@@ -85,10 +85,10 @@ SRCEXTS = .c .C .cc .cpp .CPP .c++ .cxx .cp
 HDREXTS = .h .H .hh .hpp .HPP .h++ .hxx .hp
 
 # The C++ program compiler.
-CXX    = g++
+CXX    ?= g++
 
 # The C program compiler.
-CC     = gcc
+CC     ?= gcc
 
 # The command used to delete file.
 RM     = rm -f
@@ -101,14 +101,14 @@ SRCROOT := $(foreach d,$(SRCROOT),$(d:/=))
 SRCDIRS := $(strip $(SRCROOT) $(SRCDIR))
 SRCDIRS := $(foreach d,$(SRCDIRS),$(d:/=))
 ifeq ($(RECURSION), 1)
-SRCDIRS := $(shell find $(SRCDIRS) -type d | grep \\.git -v)
+SRCDIRS := $(shell find $(SRCDIRS) -type d | grep \\.git -v | grep _build -v | grep _install -v)
 endif
 SRCDIRS := $(sort $(SRCDIRS))
 RMOBJS  := $(addsuffix /*.o, $(SRCDIRS))
 RMDEPS  := $(RMOBJS:.o=.d)
 
 # The options used in linking as well as in any direct use of ld.
-LDFLAGS   =
+LDFLAGS   ?=
 
 ## Stable Section: usually no need to be changed. But you can add more.
 ##==========================================================================
