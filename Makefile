@@ -225,10 +225,18 @@ COBJS = $(filter-out $(foreach d,$(PROGRAM), \
   $(addprefix $(SRCROOT)/,$(d).o)), $(OBJS))
 $(PROGRAM):$(OBJS)
 ifeq ($(SRC_CXX),)              # C program
+ifeq ($(SRCROOT)/$@.o, $(wildcard $(SRCROOT)/$@.o))
 	$(LINK.c)   $(COBJS) $(SRCROOT)/$@.o $(MY_LIBS) -o $@
+else
+	$(LINK.c)   $(COBJS) $(MY_LIBS) -o $@
+endif
 	@echo Type $(SRCROOT)/$@ to execute the program.
 else                            # C++ program
+ifeq ($(SRCROOT)/$@.o, $(wildcard $(SRCROOT)/$@.o))
 	$(LINK.cxx) $(COBJS) $(SRCROOT)/$@.o $(MY_LIBS) -o $@
+else
+	$(LINK.cxx) $(COBJS) $(MY_LIBS) -o $@
+endif
 	@echo Type $(SRCROOT)/$@ to execute the program.
 endif
 
