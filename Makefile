@@ -230,15 +230,28 @@ ifeq ($(SRCROOT)/$@.o, $(wildcard $(SRCROOT)/$@.o))
 else
 	$(LINK.c)   $(COBJS) $(MY_LIBS) -o $@
 endif
-	@echo Type $(SRCROOT)/$@ to execute the program.
 else                            # C++ program
 ifeq ($(SRCROOT)/$@.o, $(wildcard $(SRCROOT)/$@.o))
 	$(LINK.cxx) $(COBJS) $(SRCROOT)/$@.o $(MY_LIBS) -o $@
 else
 	$(LINK.cxx) $(COBJS) $(MY_LIBS) -o $@
 endif
-	@echo Type $(SRCROOT)/$@ to execute the program.
 endif
+ifeq ($(SRCROOT)/$@.exe, $(wildcard $(SRCROOT)/$@.exe))
+	@if [ z `file $@.exe | grep -e Linux -e Windows` ]; then \
+		mv $(SRCROOT)/$@.exe $(SRCROOT)/$@.elf; \
+		echo Use $(SRCROOT)/$@.elf to execute the program.; \
+	else \
+		echo Type $(SRCROOT)/$@.exe to execute the program.; \
+	fi
+else
+	@if [ z `file $@ | grep -e Linux -e Windows` ]; then \
+		mv $(SRCROOT)/$@ $(SRCROOT)/$@.elf; \
+		echo Use $(SRCROOT)/$@.elf to execute the program.; \
+	else \
+		echo Type $(SRCROOT)/$@ to execute the program.; \
+	fi
+endif 
 
 ifndef NODEP
 ifneq ($(DEPS),)
@@ -248,7 +261,9 @@ endif
 
 clean:
 	$(RM) $(RMDEPS) $(RMOBJS)
-	$(RM) $(PROGRAM) $(foreach d,$(PROGRAM),$(addprefix $(d),.exe))
+	$(RM) $(PROGRAM)
+	$(RM) $(foreach d,$(PROGRAM),$(addprefix $(d),.exe))
+	$(RM) $(foreach d,$(PROGRAM),$(addprefix $(d),.elf))
 
 # Show help.
 help:
