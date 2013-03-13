@@ -141,7 +141,7 @@ COMPILE.cxx = $(CXX) $(MY_CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c
 LINK.c      = $(CC)  $(MY_CFLAGS) $(CFLAGS)   $(CPPFLAGS) $(LDFLAGS)
 LINK.cxx    = $(CXX) $(MY_CFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
-.PHONY: all objs tags ctags clean help show
+.PHONY: my_all all objs tags ctags clean help show
 
 # Delete the default suffixes
 .SUFFIXES:
@@ -223,7 +223,7 @@ ctags: $(HEADERS) $(SOURCES)
 #-------------------------------------
 COBJS = $(filter-out $(foreach d,$(PROGRAM), \
   $(addprefix $(SRCROOT)/,$(d).o)), $(OBJS))
-$(PROGRAM):$(OBJS)
+$(PROGRAM):$(OBJS) ${MY_LIBS_TO_GEN}
 ifeq ($(SRC_CXX),)              # C program
 ifeq ($(SRCROOT)/$@.o, $(wildcard $(SRCROOT)/$@.o))
 	$(LINK.c)   $(COBJS) $(SRCROOT)/$@.o $(MY_LIBS) -o $@
@@ -237,6 +237,7 @@ else
 	$(LINK.cxx) $(COBJS) $(MY_LIBS) -o $@
 endif
 endif
+	@echo
 ifeq ($(SRCROOT)/$@.exe, $(wildcard $(SRCROOT)/$@.exe))
 	@if [ z `file $@.exe | grep -e Linux -e Windows` ]; then \
 		mv $(SRCROOT)/$@.exe $(SRCROOT)/$@.elf; \
@@ -251,7 +252,8 @@ else
 	else \
 		echo Type $(SRCROOT)/$@ to execute the program.; \
 	fi
-endif 
+endif
+	@echo
 
 ifndef NODEP
 ifneq ($(DEPS),)
@@ -261,7 +263,7 @@ endif
 
 clean:
 	$(RM) $(RMDEPS) $(RMOBJS)
-	$(RM) $(PROGRAM)
+	$(RM) $(PROGRAM) ${MY_LIBS_TO_GEN}
 	$(RM) $(foreach d,$(PROGRAM),$(addprefix $(d),.exe))
 	$(RM) $(foreach d,$(PROGRAM),$(addprefix $(d),.elf))
 
