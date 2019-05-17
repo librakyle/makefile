@@ -67,7 +67,7 @@ CXXFLAGS  ?= -g
 
 # The root of the project.
 SRCROOT   = .
-SRCDIR    = 
+SRCDIR    =
 RECURSION = 1
 
 # The executable file name.
@@ -239,14 +239,14 @@ endif
 endif
 	@echo
 ifeq ($(SRCROOT)/$@.exe, $(wildcard $(SRCROOT)/$@.exe))
-	@if [ z `file $@.exe | grep -e Linux -e Windows` ]; then \
+	@if [ 0 == `file $@.exe | grep -c -e Linux -e Windows` ]; then \
 		mv $(SRCROOT)/$@.exe $(SRCROOT)/$@.elf; \
 		echo Use $(SRCROOT)/$@.elf to execute the program.; \
 	else \
 		echo Type $(SRCROOT)/$@.exe to execute the program.; \
 	fi
 else
-	@if [ z `file $@ | grep -e Linux -e Windows` ]; then \
+	@if [ 0 == `file $@ | grep -c -e Linux -e Windows` ]; then \
 		mv $(SRCROOT)/$@ $(SRCROOT)/$@.elf; \
 		echo Use $(SRCROOT)/$@.elf to execute the program.; \
 	else \
