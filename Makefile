@@ -61,7 +61,7 @@
 #MY_LIBS   = `pkg-config --libs opencv boost`
 
 # The pre-processor options used by the cpp (man cpp for more).
-CPPFLAGS  = -Wall
+CPPFLAGS  ?= -Wall
 CFLAGS    ?= -g
 CXXFLAGS  ?= -g
 
@@ -84,6 +84,12 @@ SRCEXTS = .c .C .cc .cpp .CPP .c++ .cxx .cp
 # The header file types.
 HDREXTS = .h .H .hh .hpp .HPP .h++ .hxx .hp
 
+# The object file type.
+OBJEXT ?= .o
+
+# The program file type.
+PROGRAMEXT ?= .elf
+
 # The C++ program compiler.
 CXX    ?= g++
 
@@ -104,8 +110,8 @@ ifeq ($(RECURSION), 1)
 SRCDIRS := $(shell find $(SRCDIRS) -type d | grep \\.git -v | grep _build -v | grep _install -v)
 endif
 SRCDIRS := $(sort $(SRCDIRS))
-RMOBJS  := $(addsuffix /*.o, $(SRCDIRS))
-RMDEPS  := $(RMOBJS:.o=.d)
+RMOBJS  := $(addsuffix /*$(OBJEXT), $(SRCDIRS))
+RMDEPS  := $(RMOBJS:$(OBJEXT)=.d)
 
 # The options used in linking as well as in any direct use of ld.
 LDFLAGS   ?=
@@ -128,8 +134,8 @@ endif
 SOURCES = $(foreach d,$(SRCDIRS),$(wildcard $(addprefix $(d)/*,$(SRCEXTS))))
 HEADERS = $(foreach d,$(SRCDIRS),$(wildcard $(addprefix $(d)/*,$(HDREXTS))))
 SRC_CXX = $(filter-out %.c,$(SOURCES))
-OBJS    = $(addsuffix .o, $(basename $(SOURCES)))
-DEPS    = $(OBJS:.o=.d)
+OBJS    = $(addsuffix $(OBJEXT), $(basename $(SOURCES)))
+DEPS    = $(OBJS:$(OBJEXT)=.d)
 
 ## Define some useful variables.
 DEP_OPT = $(shell if `$(CC) --version | grep "gcc" >/dev/null`; then \
@@ -183,32 +189,32 @@ all: $(PROGRAM)
 	@echo -n $(dir $<) > $@
 	$(DEPEND.d) $< >> $@
 
-# Rules for generating object files (.o).
+# Rules for generating object files ($(OBJEXT)).
 #----------------------------------------
 objs:$(OBJS)
 
-%.o:%.c
+%$(OBJEXT):%.c
 	$(COMPILE.c) $< -o $@
 
-%.o:%.C
+%$(OBJEXT):%.C
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.cc
+%$(OBJEXT):%.cc
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.cpp
+%$(OBJEXT):%.cpp
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.CPP
+%$(OBJEXT):%.CPP
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.c++
+%$(OBJEXT):%.c++
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.cp
+%$(OBJEXT):%.cp
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.cxx
+%$(OBJEXT):%.cxx
 	$(COMPILE.cxx) $< -o $@
 
 # Rules for generating the tags.
@@ -222,17 +228,17 @@ ctags: $(HEADERS) $(SOURCES)
 # Rules for generating the executable.
 #-------------------------------------
 COBJS = $(filter-out $(foreach d,$(PROGRAM), \
-  $(addprefix $(SRCROOT)/,$(d).o)), $(OBJS))
+  $(addprefix $(SRCROOT)/,$(d)$(OBJEXT))), $(OBJS))
 $(PROGRAM):$(OBJS) ${MY_LIBS_TO_GEN}
 ifeq ($(SRC_CXX),)              # C program
-ifeq ($(SRCROOT)/$@.o, $(wildcard $(SRCROOT)/$@.o))
-	$(LINK.c)   $(COBJS) $(SRCROOT)/$@.o $(MY_LIBS) -o $@
+ifeq ($(SRCROOT)/$@$(OBJEXT), $(wildcard $(SRCROOT)/$@$(OBJEXT)))
+	$(LINK.c)   $(COBJS) $(SRCROOT)/$@$(OBJEXT) $(MY_LIBS) -o $@
 else
 	$(LINK.c)   $(COBJS) $(MY_LIBS) -o $@
 endif
 else                            # C++ program
-ifeq ($(SRCROOT)/$@.o, $(wildcard $(SRCROOT)/$@.o))
-	$(LINK.cxx) $(COBJS) $(SRCROOT)/$@.o $(MY_LIBS) -o $@
+ifeq ($(SRCROOT)/$@$(OBJEXT), $(wildcard $(SRCROOT)/$@$(OBJEXT)))
+	$(LINK.cxx) $(COBJS) $(SRCROOT)/$@$(OBJEXT) $(MY_LIBS) -o $@
 else
 	$(LINK.cxx) $(COBJS) $(MY_LIBS) -o $@
 endif
@@ -240,15 +246,15 @@ endif
 	@echo
 ifeq ($(SRCROOT)/$@.exe, $(wildcard $(SRCROOT)/$@.exe))
 	@if [ 0 == `file $@.exe | grep -c -e Linux -e Windows` ]; then \
-		mv $(SRCROOT)/$@.exe $(SRCROOT)/$@.elf; \
-		echo Use $(SRCROOT)/$@.elf to execute the program.; \
+		mv $(SRCROOT)/$@.exe $(SRCROOT)/$@$(PROGRAMEXT); \
+		echo Use $(SRCROOT)/$@$(PROGRAMEXT) to execute the program.; \
 	else \
 		echo Type $(SRCROOT)/$@.exe to execute the program.; \
 	fi
 else
 	@if [ 0 == `file $@ | grep -c -e Linux -e Windows` ]; then \
-		mv $(SRCROOT)/$@ $(SRCROOT)/$@.elf; \
-		echo Use $(SRCROOT)/$@.elf to execute the program.; \
+		mv $(SRCROOT)/$@ $(SRCROOT)/$@$(PROGRAMEXT); \
+		echo Use $(SRCROOT)/$@$(PROGRAMEXT) to execute the program.; \
 	else \
 		echo Type $(SRCROOT)/$@ to execute the program.; \
 	fi
@@ -265,7 +271,7 @@ clean:
 	$(RM) $(RMDEPS) $(RMOBJS)
 	$(RM) $(PROGRAM) ${MY_LIBS_TO_GEN}
 	$(RM) $(foreach d,$(PROGRAM),$(addprefix $(d),.exe))
-	$(RM) $(foreach d,$(PROGRAM),$(addprefix $(d),.elf))
+	$(RM) $(foreach d,$(PROGRAM),$(addprefix $(d),$(PROGRAMEXT)))
 
 # Show help.
 help:
