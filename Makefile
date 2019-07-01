@@ -229,7 +229,7 @@ ctags: $(HEADERS) $(SOURCES)
 #-------------------------------------
 COBJS = $(filter-out $(foreach d,$(PROGRAM), \
   $(addprefix $(SRCROOT)/,$(d)$(OBJEXT))), $(OBJS))
-$(PROGRAM):$(OBJS) ${MY_LIBS_TO_GEN}
+$(PROGRAM):${MY_LIBS_TO_GEN} $(OBJS)
 ifeq ($(SRC_CXX),)              # C program
 ifeq ($(SRCROOT)/$@$(OBJEXT), $(wildcard $(SRCROOT)/$@$(OBJEXT)))
 	$(LINK.c)   $(COBJS) $(SRCROOT)/$@$(OBJEXT) $(MY_LIBS) -o $@
