@@ -30,7 +30,7 @@
 #
 # Usage:
 # ------
-# 1. Copy the Makefile to your program directory.
+# 1. Copy the Makefile to your program directory or included by other.
 # 2. Customize in the "Customizable Section" only if necessary:
 #    * to use non-standard C/C++ libraries, set pre-processor or compiler
 #      options to <MY_CFLAGS> and linker ones to <MY_LIBS>
@@ -55,24 +55,24 @@
 ##==========================================================================
 
 # The pre-processor and compiler options.
-MY_CFLAGS = `pkg-config --cflags opencv boost` -I$(SRCROOT)
+#MY_CFLAGS = `pkg-config --cflags opencv boost` -I$(SRCROOT)
 
 # The linker options.
-MY_LIBS   = `pkg-config --libs opencv boost`
+#MY_LIBS   = `pkg-config --libs opencv boost`
 
 # The pre-processor options used by the cpp (man cpp for more).
-CPPFLAGS  = -Wall
-CFLAGS  = -g
-CXXFLAGS= -g
+CPPFLAGS  ?= -Wall
+CFLAGS    ?= -g
+CXXFLAGS  ?= -g
 
 # The root of the project.
 SRCROOT   = .
-SRCDIR    = 
+SRCDIR    =
 RECURSION = 1
 
 # The executable file name.
 # If not specified, current directory name or `demo.out' will be used.
-PROGRAM   = Main Main2 Subtitle/aa/bb/Main3
+#PROGRAM   = Main Main2 Subtitle/aa/bb/Main3
 
 ## Implicit Section: change the following only when necessary.
 ##==========================================================================
@@ -84,11 +84,17 @@ SRCEXTS = .c .C .cc .cpp .CPP .c++ .cxx .cp
 # The header file types.
 HDREXTS = .h .H .hh .hpp .HPP .h++ .hxx .hp
 
+# The object file type.
+OBJEXT ?= .o
+
+# The program file type.
+PROGRAMEXT ?= .elf
+
 # The C++ program compiler.
-CXX    = g++
+CXX    ?= g++
 
 # The C program compiler.
-CC     = gcc
+CC     ?= gcc
 
 # The command used to delete file.
 RM     = rm -f
@@ -101,14 +107,14 @@ SRCROOT := $(foreach d,$(SRCROOT),$(d:/=))
 SRCDIRS := $(strip $(SRCROOT) $(SRCDIR))
 SRCDIRS := $(foreach d,$(SRCDIRS),$(d:/=))
 ifeq ($(RECURSION), 1)
-SRCDIRS := $(shell find $(SRCDIRS) -type d | grep \\.git -v)
+SRCDIRS := $(shell find $(SRCDIRS) -type d | grep \\.git -v | grep _build -v | grep _install -v)
 endif
 SRCDIRS := $(sort $(SRCDIRS))
-RMOBJS  := $(addsuffix /*.o, $(SRCDIRS))
-RMDEPS  := $(RMOBJS:.o=.d)
+RMOBJS  := $(addsuffix /*$(OBJEXT), $(SRCDIRS))
+RMDEPS  := $(RMOBJS:$(OBJEXT)=.d)
 
 # The options used in linking as well as in any direct use of ld.
-LDFLAGS   =
+LDFLAGS   ?=
 
 ## Stable Section: usually no need to be changed. But you can add more.
 ##==========================================================================
@@ -128,8 +134,8 @@ endif
 SOURCES = $(foreach d,$(SRCDIRS),$(wildcard $(addprefix $(d)/*,$(SRCEXTS))))
 HEADERS = $(foreach d,$(SRCDIRS),$(wildcard $(addprefix $(d)/*,$(HDREXTS))))
 SRC_CXX = $(filter-out %.c,$(SOURCES))
-OBJS    = $(addsuffix .o, $(basename $(SOURCES)))
-DEPS    = $(OBJS:.o=.d)
+OBJS    = $(addsuffix $(OBJEXT), $(basename $(SOURCES)))
+DEPS    = $(OBJS:$(OBJEXT)=.d)
 
 ## Define some useful variables.
 DEP_OPT = $(shell if `$(CC) --version | grep "gcc" >/dev/null`; then \
@@ -141,7 +147,7 @@ COMPILE.cxx = $(CXX) $(MY_CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c
 LINK.c      = $(CC)  $(MY_CFLAGS) $(CFLAGS)   $(CPPFLAGS) $(LDFLAGS)
 LINK.cxx    = $(CXX) $(MY_CFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
-.PHONY: all objs tags ctags clean help show
+.PHONY: my_all all objs tags ctags clean help show
 
 # Delete the default suffixes
 .SUFFIXES:
@@ -183,32 +189,32 @@ all: $(PROGRAM)
 	@echo -n $(dir $<) > $@
 	$(DEPEND.d) $< >> $@
 
-# Rules for generating object files (.o).
+# Rules for generating object files ($(OBJEXT)).
 #----------------------------------------
 objs:$(OBJS)
 
-%.o:%.c
+%$(OBJEXT):%.c
 	$(COMPILE.c) $< -o $@
 
-%.o:%.C
+%$(OBJEXT):%.C
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.cc
+%$(OBJEXT):%.cc
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.cpp
+%$(OBJEXT):%.cpp
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.CPP
+%$(OBJEXT):%.CPP
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.c++
+%$(OBJEXT):%.c++
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.cp
+%$(OBJEXT):%.cp
 	$(COMPILE.cxx) $< -o $@
 
-%.o:%.cxx
+%$(OBJEXT):%.cxx
 	$(COMPILE.cxx) $< -o $@
 
 # Rules for generating the tags.
@@ -222,15 +228,38 @@ ctags: $(HEADERS) $(SOURCES)
 # Rules for generating the executable.
 #-------------------------------------
 COBJS = $(filter-out $(foreach d,$(PROGRAM), \
-  $(addprefix $(SRCROOT)/,$(d).o)), $(OBJS))
-$(PROGRAM):$(OBJS)
+  $(addprefix $(SRCROOT)/,$(d)$(OBJEXT))), $(OBJS))
+$(PROGRAM):${MY_LIBS_TO_GEN} $(OBJS)
 ifeq ($(SRC_CXX),)              # C program
-	$(LINK.c)   $(COBJS) $(SRCROOT)/$@.o $(MY_LIBS) -o $@
-	@echo Type $(SRCROOT)/$@ to execute the program.
-else                            # C++ program
-	$(LINK.cxx) $(COBJS) $(SRCROOT)/$@.o $(MY_LIBS) -o $@
-	@echo Type $(SRCROOT)/$@ to execute the program.
+ifeq ($(SRCROOT)/$@$(OBJEXT), $(wildcard $(SRCROOT)/$@$(OBJEXT)))
+	$(LINK.c)   $(COBJS) $(SRCROOT)/$@$(OBJEXT) $(MY_LIBS) -o $@
+else
+	$(LINK.c)   $(COBJS) $(MY_LIBS) -o $@
 endif
+else                            # C++ program
+ifeq ($(SRCROOT)/$@$(OBJEXT), $(wildcard $(SRCROOT)/$@$(OBJEXT)))
+	$(LINK.cxx) $(COBJS) $(SRCROOT)/$@$(OBJEXT) $(MY_LIBS) -o $@
+else
+	$(LINK.cxx) $(COBJS) $(MY_LIBS) -o $@
+endif
+endif
+	@echo
+ifeq ($(SRCROOT)/$@.exe, $(wildcard $(SRCROOT)/$@.exe))
+	@if [ 0 == `file $@.exe | grep -c -e Linux -e Windows` ]; then \
+		mv $(SRCROOT)/$@.exe $(SRCROOT)/$@$(PROGRAMEXT); \
+		echo Use $(SRCROOT)/$@$(PROGRAMEXT) to execute the program.; \
+	else \
+		echo Type $(SRCROOT)/$@.exe to execute the program.; \
+	fi
+else
+	@if [ 0 == `file $@ | grep -c -e Linux -e Windows` ]; then \
+		mv $(SRCROOT)/$@ $(SRCROOT)/$@$(PROGRAMEXT); \
+		echo Use $(SRCROOT)/$@$(PROGRAMEXT) to execute the program.; \
+	else \
+		echo Type $(SRCROOT)/$@ to execute the program.; \
+	fi
+endif
+	@echo
 
 ifndef NODEP
 ifneq ($(DEPS),)
@@ -240,7 +269,9 @@ endif
 
 clean:
 	$(RM) $(RMDEPS) $(RMOBJS)
-	$(RM) $(PROGRAM) $(foreach d,$(PROGRAM),$(addprefix $(d),.exe))
+	$(RM) $(PROGRAM) ${MY_LIBS_TO_GEN}
+	$(RM) $(foreach d,$(PROGRAM),$(addprefix $(d),.exe))
+	$(RM) $(foreach d,$(PROGRAM),$(addprefix $(d),$(PROGRAMEXT)))
 
 # Show help.
 help:
